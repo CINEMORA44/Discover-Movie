@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CINEMORA — Discover Movies. Explore Stories.</title>
+  <meta name="description" content="CINEMORA is a minimalist, modern movie review and curated cinema catalog platform." />
+
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            obsidian: '#09090b',
+            charcoal: '#121215',
+            graphite: '#18181b',
+            slateborder: '#27272a',
+            silver: '#a1a1aa',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom Base & Monochrome Editorial Polish */
+    :root {
+      color-scheme: dark;
+    }
+
+    body {
+      background-color: #09090b;
+      color: #fafafa;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Subtle Film Grain Texture Overlay */
+    .film-grain {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+
+    /* Strict 2:3 Portrait Aspect Ratio for Movie Posters */
+    .poster-aspect {
+      aspect-ratio: 2 / 3;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      background-color: #141417;
+    }
+
+    /* Smooth Poster Image Zoom & Card Elevation */
+    .movie-card {
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                  border-color 0.35s ease,
+                  box-shadow 0.35s ease;
+    }
+
+    .movie-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255, 255, 255, 0.28);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.85);
+    }
+
+    .movie-card .poster-img {
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+    }
+
+    .movie-card:hover .poster-img {
+      transform: scale(1.05);
+    }
+
+    /* Line clamping for clean card alignment */
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #09090b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+
+    /* Modal Backdrop & Dialog Transition */
+    #movieModal {
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    #movieModal.modal-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #movieModal.modal-visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    #movieModalPanel {
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    }
+    #movieModal.modal-hidden #movieModalPanel {
+      transform: scale(0.96) translateY(12px);
+      opacity: 0;
+    }
+    #movieModal.modal-visible #movieModalPanel {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body class="bg-obsidian text-zinc-100 antialiased selection:bg-white selection:text-black">
+
+  <!-- ==================== 1. STICKY NAVBAR ==================== -->
+  <header id="navbar" class="fixed top-0 inset-x-0 z-40 bg-obsidian/85 backdrop-blur-md border-b border-zinc-800/80 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        <!-- Brand Logo -->
+        <a href="#home" class="flex items-center gap-3 group focus:outline-none">
+          <span class="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-display font-extrabold text-base tracking-tighter transition-transform duration-300 group-hover:scale-105">
+            C
+          </span>
+          <span class="font-display font-bold text-xl sm:text-2xl tracking-[0.22em] text-white">
+            CINEMORA
+          </span>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav aria-label="Primary Navigation" class="hidden md:flex items-center gap-8">
+          <a href="#home" class="nav-link text-sm font-medium text-zinc-300 hover:text-white transition-colors py-1">Home</a>
+          <a href="#movies" class="nav-link text-sm font-medium text-zinc-300 hover:text-white transition-colors py-1">Movies</a>
+          <a href="#genres" class="nav-link text-sm font-medium text-zinc-300 hover:text-white transition-colors py-1">Genres</a>
+          <a href="#about" class="nav-link text-sm font-medium text-zinc-300 hover:text-white transition-colors py-1">About</a>
+        </nav>
+
+        <!-- Quick Search Trigger & Mobile Menu Button -->
+        <div class="flex items-center gap-3">
+          <a href="#movies" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-medium text-zinc-300 hover:text-white transition-all">
+            <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 10.5a7.5 7.5 0 0013.15 6.15z" />
+            </svg>
+            <span>15 Curated Titles</span>
+          </a>
+
+          <!-- Mobile Hamburger Button -->
+          <button
+            id="mobileMenuBtn"
+            type="button"
+            aria-label="Toggle Navigation Menu"
+            aria-expanded="false"
+            class="md:hidden p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors focus:outline-none">
+            <svg id="hamburgerIcon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg id="closeMenuIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation -->
+    <div id="mobileMenu" class="hidden md:hidden bg-charcoal border-b border-zinc-800 px-4 pt-2 pb-5 space-y-1">
+      <a href="#home" class="mobile-nav-link block px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-200 hover:bg-zinc-800/80 hover:text-white transition-colors">Home</a>
+      <a href="#movies" class="mobile-nav-link block px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-200 hover:bg-zinc-800/80 hover:text-white transition-colors">Movies</a>
+      <a href="#genres" class="mobile-nav-link block px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-200 hover:bg-zinc-800/80 hover:text-white transition-colors">Genres</a>
+      <a href="#about" class="mobile-nav-link block px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-200 hover:bg-zinc-800/80 hover:text-white transition-colors">About</a>
+    </div>
+  </header>
+
+  <!-- ==================== 2. HERO SECTION ==================== -->
+  <section id="home" class="relative pt-28 pb-20 sm:pt-36 sm:pb-28 lg:pt-44 lg:pb-36 overflow-hidden border-b border-zinc-900">
+    <!-- Atmospheric Monochrome Cinema Backdrop -->
+    <div class="absolute inset-0 z-0">
+      <img
+        src="https://image.tmdb.org/t/p/original/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg"
+        alt="Cinematic monochrome widescreen backdrop"
+        onerror="this.style.display='none'"
+        class="w-full h-full object-cover object-center grayscale opacity-25 scale-105"
+      />
+      <!-- Multi-layered Noir Vignette Gradients -->
+      <div class="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/80 to-obsidian/60"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-obsidian via-obsidian/70 to-transparent"></div>
+      <div class="absolute inset-0 film-grain"></div>
+    </div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <!-- Editorial Badge -->
+        <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/15 backdrop-blur-sm mb-6">
+          <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+          <span class="text-xs font-medium tracking-widest uppercase text-zinc-300">
+            Curated Film Criticism &amp; Archive
+          </span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="font-display font-extrabold text-4xl sm:text-6xl lg:text-7xl tracking-tight text-white leading-[1.08] mb-6">
+          Discover Movies.<br />
+          <span class="text-zinc-400">Explore Stories.</span>
+        </h1>
+
+        <!-- Platform Description -->
+        <p class="text-base sm:text-lg lg:text-xl text-zinc-300/90 font-normal leading-relaxed max-w-2xl mb-10">
+          CINEMORA is an editorial movie review and discovery platform dedicated to timeless cinema. Browse critically acclaimed masterpieces, explore genres in depth, and read thoughtful critiques crafted for true film enthusiasts.
+        </p>
+
+        <!-- Primary & Secondary CTA Buttons -->
+        <div class="flex flex-wrap items-center gap-4">
+          <a
+            href="#movies"
+            class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-white text-black font-semibold text-sm sm:text-base hover:bg-zinc-200 active:scale-[0.99] transition-all duration-200 shadow-lg shadow-white/5">
+            <span>Explore Movies</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+
+          <a
+            href="#about"
+            class="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-800 font-medium text-sm sm:text-base transition-all duration-200">
+            About CINEMORA
+          </a>
+        </div>
+
+        <!-- Minimalist Editorial Highlights -->
+        <div class="grid grid-cols-3 gap-6 max-w-md mt-14 pt-8 border-t border-zinc-800/80">
+          <div>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-white">15</p>
+            <p class="text-xs text-zinc-400 mt-1 uppercase tracking-wider">Essential Films</p>
+          </div>
+          <div>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-white">13</p>
+            <p class="text-xs text-zinc-400 mt-1 uppercase tracking-wider">Curated Genres</p>
+          </div>
+          <div>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-white">8.4</p>
+            <p class="text-xs text-zinc-400 mt-1 uppercase tracking-wider">Avg. IMDb Score</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 3, 4 & 5. CATALOG, SEARCH & GENRE FILTER ==================== -->
+  <main id="movies" class="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Section Header + Search Input -->
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400 mb-2">
+          Curated Selection
+        </p>
+        <h2 class="font-display font-bold text-3xl sm:text-4xl text-white tracking-tight">
+          Featured Movie Collection
+        </h2>
+      </div>
+
+      <!-- Search Input Bar -->
+      <div class="w-full lg:w-96 relative">
+        <label for="searchInput" class="sr-only">Search movies by title</label>
+        <div class="relative flex items-center">
+          <svg class="w-4 h-4 text-zinc-400 absolute left-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 10.5a7.5 7.5 0 0013.15 6.15z" />
+          </svg>
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Search movies by title..."
+            autocomplete="off"
+            class="w-full pl-11 pr-10 py-3 rounded-xl bg-graphite border border-zinc-800 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all"
+          />
+          <button
+            id="clearSearchBtn"
+            type="button"
+            aria-label="Clear search"
+            class="hidden absolute right-3 p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Genre Filter Section -->
+    <section id="genres" aria-label="Filter movies by genre" class="mb-10 scroll-mt-24">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-medium uppercase tracking-wider text-zinc-400">Filter by Genre</span>
+        <span id="resultsCount" class="text-xs text-zinc-400 font-medium">Showing 15 of 15 movies</span>
+      </div>
+
+      <div id="genreFilterContainer" class="flex flex-wrap items-center gap-2">
+        <!-- Genre pills rendered dynamically via JS -->
+      </div>
+    </section>
+
+    <!-- Movie Grid -->
+    <div
+      id="movieGrid"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <!-- Movie cards injected dynamically via JS -->
+    </div>
+
+    <!-- Empty State when Search / Filter yields 0 movies -->
+    <div id="emptyState" class="hidden py-20 px-6 text-center rounded-2xl bg-charcoal border border-zinc-800/80 my-6">
+      <div class="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4 text-zinc-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 16.318A4.486 4.486 0 0012.016 15a4.486 4.486 0 00-3.198 1.318M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+        </svg>
+      </div>
+      <h3 class="font-display font-semibold text-lg text-white mb-1">No matching movies found</h3>
+      <p id="emptyStateText" class="text-sm text-zinc-400 max-w-md mx-auto mb-6">
+        Try adjusting your search query or selecting a different genre filter.
+      </p>
+      <button
+        id="resetFiltersBtn"
+        type="button"
+        class="px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-200 transition-colors">
+        Reset All Filters
+      </button>
+    </div>
+  </main>
+
+  <!-- ==================== 7. ABOUT SECTION ==================== -->
+  <section id="about" class="py-20 sm:py-28 bg-charcoal border-t border-b border-zinc-900 scroll-mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <!-- Left Column: Editorial Narrative -->
+        <div class="lg:col-span-7">
+          <p class="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400 mb-3">
+            About Us
+          </p>
+          <h2 class="font-display font-bold text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-6">
+            A Minimalist Sanctuary for Cinema Discovery &amp; Thoughtful Reviews.
+          </h2>
+          <p class="text-zinc-300 text-base sm:text-lg leading-relaxed mb-5">
+            <strong class="text-white font-semibold">CINEMORA</strong> is a curated platform built for discovering, exploring, and reviewing remarkable films across every genre—from mind-bending science fiction and gripping psychological thrillers to timeless dramas and animated classics.
+          </p>
+          <p class="text-zinc-400 text-sm sm:text-base leading-relaxed mb-8">
+            Free from clutter and noise, our monochrome editorial interface puts visual storytelling and critical insight front and center. Whether you are revisiting modern masterpieces or searching for your next unforgettable watch, CINEMORA connects audiences with stories that endure.
+          </p>
+
+          <div class="flex flex-wrap gap-3">
+            <span class="px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium text-zinc-300">
+              Verified IMDb Ratings
+            </span>
+            <span class="px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium text-zinc-300">
+              Editorial Synopses
+            </span>
+            <span class="px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium text-zinc-300">
+              Community Perspectives
+            </span>
+          </div>
+        </div>
+
+        <!-- Right Column: Three Architectural Pillars -->
+        <div class="lg:col-span-5 grid grid-cols-1 gap-4">
+          <div class="p-6 rounded-2xl bg-graphite border border-zinc-800/90 hover:border-zinc-700 transition-colors">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="w-8 h-8 rounded-lg bg-white/10 text-white flex items-center justify-center text-xs font-bold">01</span>
+              <h3 class="font-display font-semibold text-base text-white">Discover Essential Cinema</h3>
+            </div>
+            <p class="text-sm text-zinc-400 leading-relaxed">
+              Explore a handpicked catalog spanning decades of filmmaking excellence with instant search and precision genre filtering.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-graphite border border-zinc-800/90 hover:border-zinc-700 transition-colors">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="w-8 h-8 rounded-lg bg-white/10 text-white flex items-center justify-center text-xs font-bold">02</span>
+              <h3 class="font-display font-semibold text-base text-white">Explore Deep Narratives</h3>
+            </div>
+            <p class="text-sm text-zinc-400 leading-relaxed">
+              Dive into full-length plot overviews, director credits, and critical ratings tailored to help you choose what to watch next.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-graphite border border-zinc-800/90 hover:border-zinc-700 transition-colors">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="w-8 h-8 rounded-lg bg-white/10 text-white flex items-center justify-center text-xs font-bold">03</span>
+              <h3 class="font-display font-semibold text-base text-white">Share Your Verdict</h3>
+            </div>
+            <p class="text-sm text-zinc-400 leading-relaxed">
+              Read audience impressions and contribute your own rating and review directly inside every film's detail dossier.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 8. FOOTER ==================== -->
+  <footer class="bg-obsidian py-14 border-t border-zinc-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-10 border-b border-zinc-900">
+        <!-- Brand & Short Description -->
+        <div class="max-w-sm">
+          <a href="#home" class="inline-flex items-center gap-3 mb-3">
+            <span class="w-7 h-7 rounded-md bg-white text-black flex items-center justify-center font-display font-extrabold text-sm">
+              C
+            </span>
+            <span class="font-display font-bold text-lg tracking-[0.22em] text-white">
+              CINEMORA
+            </span>
+          </a>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            A modern, minimalist movie review and curated film catalog platform designed for effortless cinema discovery.
+          </p>
+        </div>
+
+        <!-- Footer Navigation -->
+        <nav aria-label="Footer Navigation" class="flex flex-wrap items-center gap-6 sm:gap-8">
+          <a href="#home" class="text-sm text-zinc-400 hover:text-white transition-colors">Home</a>
+          <a href="#movies" class="text-sm text-zinc-400 hover:text-white transition-colors">Movies</a>
+          <a href="#genres" class="text-sm text-zinc-400 hover:text-white transition-colors">Genres</a>
+          <a href="#about" class="text-sm text-zinc-400 hover:text-white transition-colors">About</a>
+        </nav>
+      </div>
+
+      <!-- Copyright Bar -->
+      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+        <p>Copyright &copy; 2026 CINEMORA. All Rights Reserved.</p>
+        <p class="text-zinc-600">Poster metadata powered by TMDB.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== 6. MOVIE DETAIL MODAL ==================== -->
+  <div
+    id="movieModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modalTitle"
+    class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md">
+    <div
+      id="movieModalPanel"
+      class="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-charcoal border border-zinc-800 shadow-2xl">
+
+      <!-- Top-right Close Button -->
+      <button
+        id="closeModalTopBtn"
+        type="button"
+        aria-label="Close movie details"
+        class="sticky top-4 float-right mr-4 mt-4 z-20 p-2.5 rounded-full bg-black/75 hover:bg-white text-zinc-300 hover:text-black border border-zinc-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 p-6 sm:p-8 clear-both md:clear-none">
+        <!-- Modal Poster (2:3 Ratio) -->
+        <div class="md:col-span-5 lg:col-span-4">
+          <div id="modalPosterWrapper" class="poster-aspect rounded-xl border border-zinc-800 shadow-xl">
+            <!-- Poster image or fallback rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Modal Movie Information & Reviews -->
+        <div class="md:col-span-7 lg:col-span-8 flex flex-col justify-between">
+          <div>
+            <!-- Year, Runtime & Rating Pill -->
+            <div class="flex flex-wrap items-center gap-2.5 mb-3">
+              <span id="modalYear" class="px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-200">
+                2014
+              </span>
+              <span id="modalRuntime" class="px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-medium text-zinc-400">
+                169 min
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-black text-xs font-bold">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span>IMDb <span id="modalRating">8.7</span></span>
+              </span>
+            </div>
+
+            <!-- Title & Director -->
+            <h2 id="modalTitle" class="font-display font-bold text-2xl sm:text-3xl text-white tracking-tight mb-1.5">
+              Movie Title
+            </h2>
+            <p id="modalDirector" class="text-xs sm:text-sm text-zinc-400 mb-4">
+              Directed by Christopher Nolan
+            </p>
+
+            <!-- Genre Tags -->
+            <div id="modalGenres" class="flex flex-wrap gap-2 mb-6">
+              <!-- Genre badges inserted dynamically -->
+            </div>
+
+            <!-- Full Synopsis -->
+            <div class="mb-6">
+              <h3 class="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">
+                Full Synopsis
+              </h3>
+              <p id="modalSynopsis" class="text-sm sm:text-base text-zinc-300 leading-relaxed">
+                Detailed plot summary goes here.
+              </p>
+            </div>
+
+            <!-- Editorial & Reader Reviews Box -->
+            <div class="p-4 rounded-xl bg-graphite border border-zinc-800/90 mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                  Critic &amp; Audience Reviews
+                </h4>
+                <span id="modalReviewCount" class="text-xs text-zinc-500">1 review</span>
+              </div>
+
+              <div id="modalReviewsList" class="space-y-2.5 max-h-36 overflow-y-auto pr-1 mb-3 text-xs sm:text-sm">
+                <!-- Reviews populated dynamically -->
+              </div>
+
+              <!-- Quick Review Form -->
+              <form id="reviewForm" class="flex flex-col sm:flex-row gap-2 pt-2 border-t border-zinc-800">
+                <input
+                  id="reviewerNameInput"
+                  type="text"
+                  placeholder="Your name"
+                  required
+                  class="sm:w-32 px-3 py-2 rounded-lg bg-obsidian border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
+                />
+                <input
+                  id="reviewTextInput"
+                  type="text"
+                  placeholder="Write a brief review..."
+                  required
+                  class="flex-1 px-3 py-2 rounded-lg bg-obsidian border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
+                />
+                <button
+                  type="submit"
+                  class="px-4 py-2 rounded-lg bg-zinc-200 hover:bg-white text-black font-semibold text-xs transition-colors shrink-0">
+                  Post
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Bottom Action Bar with Prominent Close Button -->
+          <div class="flex items-center justify-end pt-4 border-t border-zinc-800/80">
+            <button
+              id="closeModalBottomBtn"
+              type="button"
+              class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-semibold text-sm transition-colors">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
+  <script>
+    /**
+     * =========================================================================
+     * 3A. TMDB API CONFIGURATION (KEEP EMPTY OR INSERT KEY HERE - NEVER DISPLAYED)
+     * =========================================================================
+     * Enter your TMDB v3 API Key below if you wish to fetch live poster paths
+     * dynamically from TMDB's `/search/movie` endpoint.
+     * When left empty (""), CINEMORA uses each movie's verified official TMDB
+     * poster_path mapped strictly by movie ID so all 15 posters load accurately.
+     */
+    const TMDB_API_KEY = "";
+    const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+    const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+
+    /**
+     * Cache dictionary storing resolved poster URLs strictly keyed by `movie.id`
+     * so search queries and genre filters never mix up or swap posters.
+     */
+    const posterCacheByMovieId = {};
+
+    /**
+     * =========================================================================
+     * 3. CURATED 15-MOVIE DATASET WITH VERIFIED TMDB POSTER PATHS
+     * =========================================================================
+     */
+    const MOVIES_DATA = [
+      {
+        id: "tt0816692",
+        tmdbId: 157336,
+        title: "Interstellar",
+        year: 2014,
+        genres: ["Sci-Fi", "Adventure"],
+        rating: 8.7,
+        director: "Christopher Nolan",
+        runtime: "169 min",
+        verifiedPosterPath: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+        shortSynopsis: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+        fullSynopsis: "In Earth's future, a global crop blight and second Dust Bowl are slowly rendering the planet uninhabitable. Professor Brand, a brilliant NASA physicist, is working on plans to save mankind by transporting Earth's population to a new home via a wormhole near Saturn. Former NASA pilot Joseph Cooper is tasked with leading an interstellar expedition across uncharted galaxies where time dilates and love transcends dimensions.",
+        criticNote: "A monumental fusion of hard astrophysics, soaring organ score, and deeply human emotion."
+      },
+      {
+        id: "tt1375666",
+        tmdbId: 27205,
+        title: "Inception",
+        year: 2010,
+        genres: ["Sci-Fi", "Action"],
+        rating: 8.8,
+        director: "Christopher Nolan",
+        runtime: "148 min",
+        verifiedPosterPath: "/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
+        shortSynopsis: "A skilled thief who steals secrets through dream-sharing technology is given the inverse task of planting an idea.",
+        fullSynopsis: "Dom Cobb is a master extractor—a thief who infiltrates the subconscious of his targets while they dream to steal valuable corporate secrets. Offered a chance to have his criminal history erased and return to his children, Cobb must assemble a specialist team to pull off the impossible: 'inception,' planting an original idea inside the mind of a corporate heir across multi-layered dream worlds.",
+        criticNote: "Precision-engineered heist architecture set inside the labyrinth of the human subconscious."
+      },
+      {
+        id: "tt0468569",
+        tmdbId: 155,
+        title: "The Dark Knight",
+        year: 2008,
+        genres: ["Action", "Crime"],
+        rating: 9.0,
+        director: "Christopher Nolan",
+        runtime: "152 min",
+        verifiedPosterPath: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+        shortSynopsis: "When the Joker wreaks havoc on Gotham, Batman must accept one of the greatest psychological tests of his ability to fight injustice.",
+        fullSynopsis: "With the help of Lieutenant Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague Gotham City. Their partnership proves effective until a rising criminal mastermind known only as the Joker unleashes a reign of calculated anarchy, forcing the Caped Crusader to confront the thin line between heroism and vigilantism.",
+        criticNote: "Transcends comic-book cinema into a taut, operatic crime thriller anchored by an unforgettable antagonist."
+      },
+      {
+        id: "tt6751668",
+        tmdbId: 496243,
+        title: "Parasite",
+        year: 2019,
+        genres: ["Thriller", "Drama"],
+        rating: 8.5,
+        director: "Bong Joon-ho",
+        runtime: "132 min",
+        verifiedPosterPath: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+        shortSynopsis: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+        fullSynopsis: "All unemployed, Ki-taek's family takes peculiar interest in the wealthy and glamorous Parks for their livelihood until they get entangled in an unexpected incident. One by one, the cunning Kim family members infiltrate the Parks' architectural mansion under false credentials, sparking a razor-sharp collision of social class, ambition, and dark secrets.",
+        criticNote: "A pitch-black, razor-sharp social satire that shifts genres effortlessly with devastating precision."
+      },
+      {
+        id: "tt3783958",
+        tmdbId: 313369,
+        title: "La La Land",
+        year: 2016,
+        genres: ["Romance", "Musical"],
+        rating: 8.0,
+        director: "Damien Chazelle",
+        runtime: "128 min",
+        verifiedPosterPath: "/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg",
+        shortSynopsis: "While navigating their careers in Los Angeles, a pianist and an actress fall in love while attempting to reconcile their aspirations.",
+        fullSynopsis: "Set in modern-day Los Angeles, aspiring actress Mia and dedicated jazz musician Sebastian cross paths repeatedly as they chase elusive artistic dreams. As their romance blossoms amid vibrant musical numbers and twilight vistas, sudden career breakthroughs test the fragile balance between personal ambition and the sacrifices required to stay together.",
+        criticNote: "A bittersweet, visually intoxicating love letter to classic Hollywood musicals and creative ambition."
+      },
+      {
+        id: "tt0120338",
+        tmdbId: 597,
+        title: "Titanic",
+        year: 1997,
+        genres: ["Romance", "Drama"],
+        rating: 7.9,
+        director: "James Cameron",
+        runtime: "194 min",
+        verifiedPosterPath: "/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg",
+        shortSynopsis: "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.",
+        fullSynopsis: "Boarded onto the maiden voyage of the unsinkable R.M.S. Titanic in April 1912, upper-class Rose DeWitt Bukater feels trapped by an arranged engagement until she meets free-spirited steerage artist Jack Dawson. Their forbidden romance defies rigid Edwardian class barriers just hours before the liner strikes an iceberg in the frigid North Atlantic.",
+        criticNote: "Sweeping historical spectacle paired with an intimate, unforgettable tragic romance."
+      },
+      {
+        id: "tt0499549",
+        tmdbId: 19995,
+        title: "Avatar",
+        year: 2009,
+        genres: ["Sci-Fi", "Adventure"],
+        rating: 7.9,
+        director: "James Cameron",
+        runtime: "162 min",
+        verifiedPosterPath: "/kyeqWdyUXW608qlYkRqosgbbJyK.jpg",
+        shortSynopsis: "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following orders and protecting his new home.",
+        fullSynopsis: "On the lush alien moon of Pandora, inhabited by the indigenous Na'vi, paraplegic former Marine Jake Sully participates in the Avatar Program—controlling a genetically engineered Na'vi body. Immersed in Pandora's bioluminescent ecosystem and culture, Jake finds his loyalties tested when corporate mining forces threaten to destroy the Na'vi homeland.",
+        criticNote: "Landmark world-building that redefined immersive theatrical cinema and environmental storytelling."
+      },
+      {
+        id: "tt7286456",
+        tmdbId: 475557,
+        title: "Joker",
+        year: 2019,
+        genres: ["Crime", "Drama"],
+        rating: 8.3,
+        director: "Todd Phillips",
+        runtime: "122 min",
+        verifiedPosterPath: "/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
+        shortSynopsis: "In 1981 Gotham City, a struggling, mentally ill comedian is disregarded by society and spirals into a downward revolution of crime.",
+        fullSynopsis: "Isolated, bullied, and disregarded by society in decaying 1981 Gotham City, party clown and aspiring stand-up comedian Arthur Fleck struggles to find connection while caring for his frail mother. A series of devastating personal revelations and public humiliations propel Arthur's descent into madness, igniting a citywide populist uprising.",
+        criticNote: "A haunting, gritty character study fueled by a transformative central performance."
+      },
+      {
+        id: "tt4154796",
+        tmdbId: 299534,
+        title: "Avengers: Endgame",
+        year: 2019,
+        genres: ["Action", "Adventure"],
+        rating: 8.4,
+        director: "Anthony & Joe Russo",
+        runtime: "181 min",
+        verifiedPosterPath: "/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
+        shortSynopsis: "After the devastating events of Infinity War, the remaining Avengers assemble once more in order to reverse Thanos' actions.",
+        fullSynopsis: "Five years after Thanos erased half of all life in the universe, the fractured surviving Avengers discover a daring possibility to navigate the Quantum Realm and retrieve the Infinity Stones from the past. United for one final stand, Earth's mightiest heroes risk everything to restore balance to the cosmos.",
+        criticNote: "An emotional, triumphant culmination of a decade-spanning cinematic saga."
+      },
+      {
+        id: "tt0241527",
+        tmdbId: 671,
+        title: "Harry Potter and the Philosopher's Stone",
+        year: 2001,
+        genres: ["Fantasy", "Adventure"],
+        rating: 7.6,
+        director: "Chris Columbus",
+        runtime: "152 min",
+        verifiedPosterPath: "/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg",
+        shortSynopsis: "An orphaned boy enrolls in a school of wizardry, where he learns the truth about himself, his family, and the terrible evil haunting magic.",
+        fullSynopsis: "Rescued from the neglectful Dursley household on his eleventh birthday, Harry Potter discovers he is a famous wizard invited to attend Hogwarts School of Witchcraft and Wizardry. Alongside loyal friends Ron Weasley and Hermione Granger, Harry uncovers the secret of the Philosopher's Stone hidden within the castle before dark forces can claim it.",
+        criticNote: "Enchanting, warm-hearted fantasy that brought a beloved literary universe vividly to life."
+      },
+      {
+        id: "tt0111161",
+        tmdbId: 278,
+        title: "The Shawshank Redemption",
+        year: 1994,
+        genres: ["Drama", "Crime"],
+        rating: 9.3,
+        director: "Frank Darabont",
+        runtime: "142 min",
+        verifiedPosterPath: "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
+        shortSynopsis: "Over the course of several years, two convicts form a friendship, seeking consolation and eventual redemption through basic compassion.",
+        fullSynopsis: "Wrongfully convicted of murdering his wife and her lover in 1947, banker Andy Dufresne is sentenced to two consecutive life terms at the brutal Shawshank State Penitentiary. Through quiet resilience, financial acumen, and an enduring bond with fellow inmate Ellis 'Red' Redding, Andy keeps hope alive behind concrete walls for nearly two decades.",
+        criticNote: "A timeless testament to human dignity, patience, and the quiet power of hope."
+      },
+      {
+        id: "tt0245429",
+        tmdbId: 129,
+        title: "Spirited Away",
+        year: 2001,
+        genres: ["Animation", "Fantasy"],
+        rating: 8.6,
+        director: "Hayao Miyazaki",
+        runtime: "125 min",
+        verifiedPosterPath: "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
+        shortSynopsis: "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits.",
+        fullSynopsis: "When ten-year-old Chihiro and her parents stumble upon an abandoned amusement park, her parents are transformed into giant pigs after eating enchanted food. Trapped in a bustling bathhouse for spirits run by the sorceress Yubaba, Chihiro must summon courage, empathy, and resilience to free her parents and reclaim her true name.",
+        criticNote: "Boundless hand-drawn imagination and heartfelt coming-of-age storytelling at its absolute peak."
+      },
+      {
+        id: "tt1457767",
+        tmdbId: 138843,
+        title: "The Conjuring",
+        year: 2013,
+        genres: ["Horror", "Mystery"],
+        rating: 7.5,
+        director: "James Wan",
+        runtime: "112 min",
+        verifiedPosterPath: "/wVYREutTvI2tmxr6ujrHT704wGF.jpg",
+        shortSynopsis: "Paranormal investigators Ed and Lorraine Warren work to help a family terrorized by a dark presence in their farmhouse.",
+        fullSynopsis: "In 1971, Roger and Carolyn Perron move their five daughters into a secluded Rhode Island farmhouse, only to experience escalating, malevolent supernatural phenomena. Desperate for help, they call upon renowned demonologists Ed and Lorraine Warren, who uncover a sinister curse tied to the property's dark history.",
+        criticNote: "Masterfully paced old-school atmospheric dread with genuine emotional stakes."
+      },
+      {
+        id: "tt0107290",
+        tmdbId: 329,
+        title: "Jurassic Park",
+        year: 1993,
+        genres: ["Adventure", "Sci-Fi"],
+        rating: 8.2,
+        director: "Steven Spielberg",
+        runtime: "127 min",
+        verifiedPosterPath: "/oU7Oq2kFAAlGqbU4VoAE36g4hoI.jpg",
+        shortSynopsis: "A pragmatic paleontologist touring an almost complete theme park on an island in Central America is tasked with protecting a couple of kids.",
+        fullSynopsis: "Industrialist John Hammond invites paleontologists Alan Grant and Ellie Sattler, along with mathematician Ian Malcolm, to preview Isla Nublar—an island wildlife park populated by cloned dinosaurs. When corporate sabotage shuts down the park's security grid during a tropical storm, the visitors must survive nature's fiercest prehistoric predators.",
+        criticNote: "Pure cinematic awe combining groundbreaking visual effects with breathless suspense."
+      },
+      {
+        id: "tt0109830",
+        tmdbId: 13,
+        title: "Forrest Gump",
+        year: 1994,
+        genres: ["Drama", "Romance"],
+        rating: 8.8,
+        director: "Robert Zemeckis",
+        runtime: "142 min",
+        verifiedPosterPath: "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+        shortSynopsis: "The history of the United States from the 1950s to the '70s unfolds from the perspective of an Alabama man with an IQ of 75.",
+        fullSynopsis: "Sitting on a Savannah bus stop bench, kind-hearted Forrest Gump recounts his extraordinary life journey—from gridiron star and Vietnam War hero to ping-pong diplomat and shrimp boat captain. Across decades of pivotal American history, Forrest's unwavering devotion remains anchored to his childhood sweetheart, Jenny.",
+        criticNote: "Warm, sweeping, and deeply moving Americana carried by an iconic performance."
+      }
+    ];
+
+    /**
+     * All Genre Pills specified in Requirements
+     */
+    const GENRES_LIST = [
+      "All",
+      "Action",
+      "Adventure",
+      "Comedy",
+      "Drama",
+      "Horror",
+      "Romance",
+      "Sci-Fi",
+      "Thriller",
+      "Fantasy",
+      "Animation",
+      "Crime",
+      "Musical",
+      "Mystery"
+    ];
+
+    /**
+     * Application State
+     */
+    let activeGenre = "All";
+    let searchQuery = "";
+    let currentModalMovieId = null;
+
+    // Store user-submitted reviews per movie ID in memory
+    const userReviewsByMovieId = {};
+    MOVIES_DATA.forEach((movie) => {
+      userReviewsByMovieId[movie.id] = [
+        {
+          author: "CINEMORA Editorial",
+          text: movie.criticNote
+        }
+      ];
+    });
+
+    /**
+     * =========================================================================
+     * 3A. DYNAMIC TMDB POSTER RESOLUTION WITH ID-KEYED CACHE & FALLBACK
+     * =========================================================================
+     * Fetches the authentic movie poster dynamically from TMDB `/search/movie`
+     * matching title and release year when `TMDB_API_KEY` is provided.
+     * Falls back immediately to the verified exact TMDB `poster_path` mapped
+     * to that specific movie so every single poster is 100% accurate.
+     */
+    async function resolveMoviePoster(movie) {
+      // Return cached URL if already resolved for this movie ID
+      if (posterCacheByMovieId[movie.id]) {
+        return posterCacheByMovieId[movie.id];
+      }
+
+      // Default verified URL for this exact film
+      const fallbackVerifiedUrl = movie.verifiedPosterPath
+        ? `${TMDB_IMAGE_BASE_URL}${movie.verifiedPosterPath}`
+        : null;
+
+      // If a TMDB API key is configured, query TMDB /search/movie dynamically
+      if (TMDB_API_KEY && TMDB_API_KEY.trim() !== "") {
+        try {
+          const url = `${TMDB_BASE_URL}/search/movie?api_key=${encodeURIComponent(
+            TMDB_API_KEY.trim()
+          )}&query=${encodeURIComponent(movie.title)}&year=${movie.year}`;
+
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data.results) && data.results.length > 0) {
+              // Match exact TMDB ID or exact title + release year
+              const exactMatch =
+                data.results.find((item) => item.id === movie.tmdbId) ||
+                data.results.find(
+                  (item) =>
+                    item.title &&
+                    item.title.toLowerCase() === movie.title.toLowerCase() &&
+                    item.release_date &&
+                    item.release_date.startsWith(String(movie.year))
+                ) ||
+                data.results[0];
+
+              if (exactMatch && exactMatch.poster_path) {
+                const dynamicPosterUrl = `${TMDB_IMAGE_BASE_URL}${exactMatch.poster_path}`;
+                posterCacheByMovieId[movie.id] = dynamicPosterUrl;
+                return dynamicPosterUrl;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`TMDB live fetch fallback triggered for "${movie.title}":`, err);
+        }
+      }
+
+      // Store and return the verified poster URL keyed by movie.id
+      posterCacheByMovieId[movie.id] = fallbackVerifiedUrl;
+      return fallbackVerifiedUrl;
+    }
+
+    /**
+     * Generates HTML for a 2:3 Poster with clean "Poster Not Available" fallback
+     */
+    function buildPosterMarkup(movie, posterUrl, extraClasses = "") {
+      const safeTitle = escapeHtml(movie.title);
+      if (!posterUrl) {
+        return `
+          <div class="w-full h-full flex flex-col items-center justify-center bg-zinc-900 text-zinc-500 p-4 text-center border border-zinc-800 ${extraClasses}">
+            <svg class="w-8 h-8 mb-2 text-zinc-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-3.75 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m1.5-3.75C5.496 8.25 6 7.746 6 7.125v-1.5M4.875 8.25C5.496 8.25 6 8.754 6 9.375v1.5m0-5.25v5.25m0-5.25C6 5.004 6.504 4.5 7.125 4.5h9.75c.621 0 1.125.504 1.125 1.125m1.125 2.625h1.5m-1.5 0A1.125 1.125 0 0118 7.125v-1.5m1.125 2.625c-.621 0-1.125.504-1.125 1.125v1.5m2.625-2.625c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125M18 5.625v5.25M7.125 12h9.75m-9.75 0A1.125 1.125 0 016 10.875M7.125 12C6.504 12 6 12.504 6 13.125m0-2.25C6 11.496 5.496 12 4.875 12M18 10.875c0 .621-.504 1.125-1.125 1.125M18 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m-12 5.25v-5.25m0 5.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125m-12 0v-1.5c0-.621-.504-1.125-1.125-1.125M18 18.375v-5.25m0 5.25v-1.5c0-.621.504-1.125 1.125-1.125M18 13.125v1.5c0 .621.504 1.125 1.125 1.125M18 13.125c0-.621.504-1.125 1.125-1.125M6 13.125v1.5c0 .621-.504 1.125-1.125 1.125M6 13.125C6 12.504 5.496 12 4.875 12m-1.5 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M19.125 12h1.5m0 0c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h1.5m14.25 0h1.5" />
+            </svg>
+            <span class="text-xs font-medium tracking-wide uppercase">Poster Not Available</span>
+          </div>
+        `;
+      }
+
+      return `
+        <img
+          src="${posterUrl}"
+          alt="${safeTitle} (${movie.year}) Official Poster"
+          loading="lazy"
+          onerror="handlePosterError(this)"
+          class="poster-img w-full h-full object-cover object-center ${extraClasses}"
+        />
+        <div class="poster-fallback hidden w-full h-full flex-col items-center justify-center bg-zinc-900 text-zinc-500 p-4 text-center">
+          <svg class="w-8 h-8 mb-2 text-zinc-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+          <span class="text-xs font-medium tracking-wide uppercase">Poster Not Available</span>
+        </div>
+      `;
+    }
+
+    /**
+     * Global Image Error Handler: replaces broken image cleanly with "Poster Not Available"
+     */
+    window.handlePosterError = function (imgElement) {
+      imgElement.style.display = "none";
+      const fallback = imgElement.nextElementSibling;
+      if (fallback && fallback.classList.contains("poster-fallback")) {
+        fallback.classList.remove("hidden");
+        fallback.classList.add("flex");
+      }
+    };
+
+    /**
+     * Simple HTML escaping helper
+     */
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    /**
+     * =========================================================================
+     * 5. RENDER GENRE FILTER BUTTONS
+     * =========================================================================
+     */
+    function renderGenreButtons() {
+      const container = document.getElementById("genreFilterContainer");
+      container.innerHTML = GENRES_LIST.map((genre) => {
+        const isActive = activeGenre === genre;
+        const baseClasses =
+          "px-3.5 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 border cursor-pointer select-none";
+        const stateClasses = isActive
+          ? "bg-white text-black border-white shadow-sm"
+          : "bg-graphite text-zinc-300 border-zinc-800 hover:border-zinc-600 hover:text-white";
+
+        return `
+          <button
+            type="button"
+            data-genre="${escapeHtml(genre)}"
+            aria-pressed="${isActive}"
+            class="genre-pill ${baseClasses} ${stateClasses}">
+            ${escapeHtml(genre)}
+          </button>
+        `;
+      }).join("");
+
+      // Attach click events to genre pills
+      container.querySelectorAll(".genre-pill").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeGenre = btn.getAttribute("data-genre");
+          renderGenreButtons();
+          renderMoviesGrid();
+        });
+      });
+    }
+
+    /**
+     * =========================================================================
+     * 3 & 4. FILTER & RENDER MOVIE COLLECTION GRID
+     * =========================================================================
+     */
+    function getFilteredMovies() {
+      const normalizedQuery = searchQuery.trim().toLowerCase();
+
+      return MOVIES_DATA.filter((movie) => {
+        const matchesGenre =
+          activeGenre === "All" ||
+          movie.genres.some((g) => g.toLowerCase() === activeGenre.toLowerCase());
+
+        const matchesSearch =
+          normalizedQuery === "" ||
+          movie.title.toLowerCase().includes(normalizedQuery);
+
+        return matchesGenre && matchesSearch;
+      });
+    }
+
+    function renderMoviesGrid() {
+      const grid = document.getElementById("movieGrid");
+      const emptyState = document.getElementById("emptyState");
+      const emptyStateText = document.getElementById("emptyStateText");
+      const resultsCount = document.getElementById("resultsCount");
+
+      const filtered = getFilteredMovies();
+
+      // Update counter text
+      resultsCount.textContent = `Showing ${filtered.length} of ${MOVIES_DATA.length} movies`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        grid.classList.add("hidden");
+        emptyState.classList.remove("hidden");
+
+        if (searchQuery.trim() !== "" && activeGenre !== "All") {
+          emptyStateText.textContent = `No movies found matching "${searchQuery}" in the ${activeGenre} genre.`;
+        } else if (searchQuery.trim() !== "") {
+          emptyStateText.textContent = `No movies found matching "${searchQuery}".`;
+        } else {
+          emptyStateText.textContent = `No movies currently listed under the ${activeGenre} genre.`;
+        }
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      grid.classList.remove("hidden");
+
+      grid.innerHTML = filtered
+        .map((movie) => {
+          // Retrieve accurate poster from cache keyed by movie.id
+          const posterUrl = posterCacheByMovieId[movie.id] || `${TMDB_IMAGE_BASE_URL}${movie.verifiedPosterPath}`;
+
+          const genreBadges = movie.genres
+            .map(
+              (g) =>
+                `<span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[11px] font-medium text-zinc-300">${escapeHtml(
+                  g
+                )}</span>`
+            )
+            .join("");
+
+          return `
+            <article class="movie-card flex flex-col rounded-2xl bg-charcoal border border-zinc-800/90 overflow-hidden">
+              <!-- 2:3 Portrait Poster Container -->
+              <div class="poster-aspect group cursor-pointer" data-detail-id="${movie.id}">
+                ${buildPosterMarkup(movie, posterUrl)}
+
+                <!-- Top-Right IMDb Rating Badge -->
+                <div class="absolute top-3 right-3 z-10 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/85 backdrop-blur-md border border-white/15 text-xs font-bold text-white shadow">
+                  <svg class="w-3.5 h-3.5 text-white fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span>${movie.rating.toFixed(1)}</span>
+                </div>
+
+                <!-- Release Year Badge -->
+                <div class="absolute bottom-3 left-3 z-10 px-2 py-0.5 rounded bg-black/80 backdrop-blur-sm border border-white/10 text-[11px] font-medium text-zinc-300">
+                  ${movie.year}
+                </div>
+              </div>
+
+              <!-- Card Content -->
+              <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 class="font-display font-bold text-base sm:text-lg text-white leading-snug line-clamp-2 mb-2">
+                    ${escapeHtml(movie.title)}
+                  </h3>
+
+                  <div class="flex flex-wrap gap-1.5 mb-3">
+                    ${genreBadges}
+                  </div>
+
+                  <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed line-clamp-3 mb-5">
+                    ${escapeHtml(movie.shortSynopsis)}
+                  </p>
+                </div>
+
+                <!-- View Details Button -->
+                <button
+                  type="button"
+                  data-detail-id="${movie.id}"
+                  class="view-details-btn w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-white text-zinc-200 hover:text-black border border-zinc-800 hover:border-white font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-2">
+                  <span>View Details</span>
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+
+      // Attach click handlers for "View Details" buttons and posters
+      grid.querySelectorAll("[data-detail-id]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const movieId = el.getAttribute("data-detail-id");
+          openMovieModal(movieId);
+        });
+      });
+    }
+
+    /**
+     * =========================================================================
+     * 6. MOVIE DETAIL MODAL & INTERACTIVE REVIEWS
+     * =========================================================================
+     */
+    function openMovieModal(movieId) {
+      const movie = MOVIES_DATA.find((m) => m.id === movieId);
+      if (!movie) return;
+
+      currentModalMovieId = movie.id;
+      const posterUrl = posterCacheByMovieId[movie.id] || `${TMDB_IMAGE_BASE_URL}${movie.verifiedPosterPath}`;
+
+      // Populate Modal Content
+      document.getElementById("modalPosterWrapper").innerHTML = buildPosterMarkup(movie, posterUrl);
+      document.getElementById("modalTitle").textContent = movie.title;
+      document.getElementById("modalYear").textContent = movie.year;
+      document.getElementById("modalRuntime").textContent = movie.runtime;
+      document.getElementById("modalRating").textContent = movie.rating.toFixed(1);
+      document.getElementById("modalDirector").textContent = `Directed by ${movie.director}`;
+      document.getElementById("modalSynopsis").textContent = movie.fullSynopsis;
+
+      document.getElementById("modalGenres").innerHTML = movie.genres
+        .map(
+          (g) =>
+            `<span class="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 text-xs font-medium text-zinc-200">${escapeHtml(
+              g
+            )}</span>`
+        )
+        .join("");
+
+      renderModalReviews(movie.id);
+
+      // Show Modal
+      const modal = document.getElementById("movieModal");
+      modal.classList.remove("modal-hidden");
+      modal.classList.add("modal-visible");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeMovieModal() {
+      const modal = document.getElementById("movieModal");
+      modal.classList.remove("modal-visible");
+      modal.classList.add("modal-hidden");
+      document.body.style.overflow = "";
+      currentModalMovieId = null;
+    }
+
+    function renderModalReviews(movieId) {
+      const list = userReviewsByMovieId[movieId] || [];
+      const container = document.getElementById("modalReviewsList");
+      const countEl = document.getElementById("modalReviewCount");
+
+      countEl.textContent = `${list.length} ${list.length === 1 ? "review" : "reviews"}`;
+
+      container.innerHTML = list
+        .map(
+          (rev) => `
+          <div class="p-2.5 rounded-lg bg-obsidian/80 border border-zinc-800/80">
+            <p class="text-[11px] font-semibold text-white mb-0.5">${escapeHtml(rev.author)}</p>
+            <p class="text-xs text-zinc-400 leading-relaxed">${escapeHtml(rev.text)}</p>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    /**
+     * =========================================================================
+     * INITIALIZE ALL INTERACTIONS & ASYNC POSTER RESOLUTION
+     * =========================================================================
+     */
+    async function initApp() {
+      // 1. Pre-populate cache with verified paths immediately so initial render has zero delay
+      MOVIES_DATA.forEach((movie) => {
+        posterCacheByMovieId[movie.id] = `${TMDB_IMAGE_BASE_URL}${movie.verifiedPosterPath}`;
+      });
+
+      // 2. Render Genre Filter Pills & Initial 15-Movie Grid
+      renderGenreButtons();
+      renderMoviesGrid();
+
+      // 3. If a TMDB API Key is configured, dynamically fetch and verify posters via TMDB API
+      if (TMDB_API_KEY && TMDB_API_KEY.trim() !== "") {
+        await Promise.all(
+          MOVIES_DATA.map(async (movie) => {
+            delete posterCacheByMovieId[movie.id];
+            await resolveMoviePoster(movie);
+          })
+        );
+        renderMoviesGrid();
+      }
+
+      // 4. Real-Time Search Bar Event Listeners
+      const searchInput = document.getElementById("searchInput");
+      const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+      searchInput.addEventListener("input", (e) => {
+        searchQuery = e.target.value;
+        clearSearchBtn.classList.toggle("hidden", searchQuery.length === 0);
+        renderMoviesGrid();
+      });
+
+      clearSearchBtn.addEventListener("click", () => {
+        searchQuery = "";
+        searchInput.value = "";
+        clearSearchBtn.classList.add("hidden");
+        renderMoviesGrid();
+        searchInput.focus();
+      });
+
+      // 5. Reset Filters Button in Empty State
+      document.getElementById("resetFiltersBtn").addEventListener("click", () => {
+        activeGenre = "All";
+        searchQuery = "";
+        searchInput.value = "";
+        clearSearchBtn.classList.add("hidden");
+        renderGenreButtons();
+        renderMoviesGrid();
+      });
+
+      // 6. Modal Close Handlers (Top X, Bottom Close Button, Backdrop Click, Escape Key)
+      document.getElementById("closeModalTopBtn").addEventListener("click", closeMovieModal);
+      document.getElementById("closeModalBottomBtn").addEventListener("click", closeMovieModal);
+
+      document.getElementById("movieModal").addEventListener("click", (e) => {
+        if (e.target.id === "movieModal") {
+          closeMovieModal();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && currentModalMovieId) {
+          closeMovieModal();
+        }
+      });
+
+      // 7. Interactive Modal Review Submission
+      document.getElementById("reviewForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!currentModalMovieId) return;
+
+        const nameInput = document.getElementById("reviewerNameInput");
+        const textInput = document.getElementById("reviewTextInput");
+
+        const author = nameInput.value.trim();
+        const text = textInput.value.trim();
+        if (!author || !text) return;
+
+        userReviewsByMovieId[currentModalMovieId].push({ author, text });
+        renderModalReviews(currentModalMovieId);
+
+        nameInput.value = "";
+        textInput.value = "";
+      });
+
+      // 8. Mobile Hamburger Menu Toggle
+      const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+      const mobileMenu = document.getElementById("mobileMenu");
+      const hamburgerIcon = document.getElementById("hamburgerIcon");
+      const closeMenuIcon = document.getElementById("closeMenuIcon");
+
+      function toggleMobileMenu(forceClose = false) {
+        const isCurrentlyHidden = mobileMenu.classList.contains("hidden");
+        const shouldOpen = forceClose ? false : isCurrentlyHidden;
+
+        mobileMenu.classList.toggle("hidden", !shouldOpen);
+        hamburgerIcon.classList.toggle("hidden", shouldOpen);
+        closeMenuIcon.classList.toggle("hidden", !shouldOpen);
+        mobileMenuBtn.setAttribute("aria-expanded", String(shouldOpen));
+      }
+
+      mobileMenuBtn.addEventListener("click", () => toggleMobileMenu());
+
+      document.querySelectorAll(".mobile-nav-link").forEach((link) => {
+        link.addEventListener("click", () => toggleMobileMenu(true));
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
